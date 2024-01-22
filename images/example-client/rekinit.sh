@@ -16,6 +16,7 @@ fi
 while true
 do
   echo "*** kinit at "+$(date -I)
+   #export KRB5_TRACE=/dev/stdout kinit admin
    kinit -V $OPTIONS $APPEND_OPTIONS
    klist -c /dev/shm/ccache 
    echo "*** Waiting for $PERIOD_SECONDS seconds"

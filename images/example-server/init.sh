@@ -1,8 +1,7 @@
 #!/bin/sh
 
-KDC_CONFIG_DIR=/var/kerberos/krb5kdc
-
-KDC_DATABASE=/dev/shm/kerberos/db
+KDC_CONFIG_DIR=/var/lib/krb5kdc
+KDC_DATABASE=/dev/shm/kerberosdb
 
 [ -z ${KRB5_KDC} ] && echo "*** KRB5_KDC variable not set, KDC host missing, using 'localhost' as default." && KRB5_KDC=localhost
 
@@ -67,17 +66,22 @@ ${KRB5_PASS}
 ${KRB5_PASS}
 EOF
 
+   echo -e "*** Creating kerberos db with kdb5_util"
    kdb5_util create -r ${KRB5_REALM} < /tmp/krb5_pass
+   echo -e "*** Finished Creating kerberos db with kdb5_util"
    rm /tmp/krb5_pass
-   kadmin.local -r ${KRB5_REALM} -p "K/M@KRV.SVC" -q "addprinc -pw ${KRB5_PASS} admin/admin@${KRB5_REALM}"
-
+   echo -e "*** Creating initial users with kadmin.local"
+   kadmin.local -r ${KRB5_REALM} -p "K/M@KRV.SVC" -q "addprinc -pw ${KRB5_PASS} admin/admin@${KRB5_REALM}" 
+   echo -e "*** Finished Creating initial users with kadmin.local"
    fi
 }
 
 function share_config()
 {
+
    mkdir -p /dev/shm/krb5/etc
-   cp -rp /var/kerberos/* /dev/shm/krb5/
+   cp -rp /var/lib/krb5kdc /dev/shm/krb5/
+   cp -rp /var/lib/krb5kdc.d /dev/shm/krb5/
    cp /etc/krb5.conf /dev/shm/krb5/etc/
    cp -rp /etc/krb5.conf.d /dev/shm/krb5/etc/
 
@@ -96,7 +100,7 @@ function copy_shared_config()
 
   done
 
-  cp -r /dev/shm/krb5/krb5* /var/kerberos/
+  cp -r /dev/shm/krb5/krb5* /var/lib/
   cp /dev/shm/krb5/etc/krb5.conf /etc/
   cp -r /dev/shm/krb5/etc/krb5.conf.d/* /etc/krb5.conf.d/
 

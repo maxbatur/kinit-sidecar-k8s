@@ -1,0 +1,4 @@
+image: krb5-example-client:1.0
+kdcServer: krb5-server
+krb5Realm: EXAMPLE.COM
+prefix: krb5

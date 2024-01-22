@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.prefix }}-example-app
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      deploymentconfig: krb5-client
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        deploymentconfig: krb5-client
+    spec:
+      containers:
+      - env:
+        - name: PERIOD_SECONDS
+          value: "10"
+        - name: OPTIONS
+          value: -k example@{{ .Values.krb5Realm }}
+        image: {{ .Values.image }}
+        imagePullPolicy: IfNotPresent
+        name: kinit-sidecar
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /krb5
+          name: keytabs
+        - mountPath: /dev/shm
+          name: ccache
+        - mountPath: /etc/krb5.conf.d
+          name: config
+      - command:
+        - /bin/sh
+        - -c
+        - while true; do echo "*** checking if authenticated"; klist ; sleep 5; done
+        image: {{ .Values.image }}
+        imagePullPolicy: IfNotPresent
+        name: example-app
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: ccache
+        - mountPath: /etc/krb5.conf.d
+          name: config
+      securityContext:
+        runAsUser: 1000 
+        fsGroup: 1000
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: keytabs
+      - emptyDir:
+          medium: Memory
+        name: ccache
+      - configMap:
+          defaultMode: 420
+          name: {{ .Values.prefix }}-client
+        name: config

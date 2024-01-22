@@ -1,0 +1,13 @@
+apiVersion: v1
+data:
+  {{ .Values.krb5Realm }}.conf: |+
+    [realms]
+    {{ .Values.krb5Realm }} = {
+       kdc = {{ .Values.kdcServer }}:88
+       admin_server = {{ .Values.kdcServer }}:749
+       kpasswd_server = {{ .Values.kdcServer }}:464
+    }
+
+kind: ConfigMap
+metadata:
+  name: {{ .Values.prefix }}-client

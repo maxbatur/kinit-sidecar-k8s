@@ -1,0 +1,3 @@
+image: krb5-example-server:1.0
+krb5Realm: EXAMPLE.COM
+name: 'krb5-server'
